@@ -39,13 +39,12 @@ DBG:	##### DEBUGG BREAKPOINT ######
 
         addi    $v0, $zero, 0           # Initialize Sum to zero.
 	add	$t0, $zero, $zero	# Initialize array index i to zero.
-	
-		
-for_all_in_array:
-	
 	addi $sp, $sp, -8
 	sw $s0, 0($sp)
 	sw $s1, 4($sp)
+		
+for_all_in_array:
+	
 	
 	#### Append a MIPS-instruktion before each of these comments
 	
@@ -73,6 +72,9 @@ for_all_in_array:
   	# next element
 	
 end_for_all:
+	lw $s0, 0($sp)
+	lw $s1, 4($sp)
+	addi $sp, $sp, 8
 	jr	$ra			# Return to caller.
 	
 ##############################################################################
@@ -149,7 +151,17 @@ string_for_each:
 to_upper:
 
 	#### Write your solution here ####
-    
+	lb $t0, 0($a0) # take the current character
+	
+	# if the current character is not in the (not yet uppercased) alphabet
+	bgt $t0, 122, return_to_upper
+	blt $t0, 97, return_to_upper
+	
+	addi $t0, $t0, -32 # turn the character to upper case
+	
+	sb $t0, 0($a0) # load the character back to memory
+	
+return_to_upper:
 	jr	$ra
 
 
@@ -185,7 +197,7 @@ STR_for_each_to_upper:
 # MAIN: Main calls various subroutines and print out results.
 #
 ##############################################################################	
-main:
+main:	
 	addi	$sp, $sp, -4	# PUSH return address
 	sw	$ra, 0($sp)
 
@@ -287,13 +299,13 @@ STR_quote:
 
 	.text
 
-	add	$t0, $a0, $zero
+	add	$t0, $a0, $zero  #QHP: Temporary save $a0 before system call
 	
 	li	$v0, 4
 	la	$a0, STR_str_is
 	syscall
 
-	add	$a0, $t0, $zero
+	add	$a0, $t0, $zero #QHP: Restore the value of $a0 after system call
 	syscall
 
 	li	$v0, 4	
