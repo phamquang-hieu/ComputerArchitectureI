@@ -164,7 +164,51 @@ to_upper:
 return_to_upper:
 	jr	$ra
 
+##############################################################################
+#
+#  DESCRIPTION: Reverse a string.
+#	
+#        INPUT: $a0 - address to the 1st character of a NUL terminated string
+#
+##############################################################################		
+string_reverse: 
+	
+	# Save argument $a0 in case subroutine call another subroutine that may modify $a0
+	addi	$sp, $sp, -8
+	sw	$a0, 0($sp)
+	sw	$ra, 4($sp)
+	
+	jal string_length 
+	
+	lw	$a0, 0($sp)
+	lw	$ra, 4($sp)	
+	addi	$sp, $sp, 8	
+	
+	add	$t0, $v0, $zero 	# $t0: length of the string
+	
+	addi	$t0, $t0, -1
+	add	$t0, $a0, $t0 	# $t0: address of the last character in the string
+	
+	# if the last index is not yet = the first index or = the first index - 1
+	while_true:
+		lb	$t1, 0($t0)
+		lb	$t2, 0($a0)
+		
+		sb	$t2, 0($t0)
+		sb	$t1, 0($a0)
+		
+		beq	$a0, $t0, end_reverse
+		addi	$t2, $a0, -1
+		beq	$t2, $t0, end_reverse
+		
+		addi	$a0, $a0, 1
+		addi	$t0, $t0, -1	
+		
+		j while_true
 
+	end_reverse:
+		jr $ra
+	
 ##############################################################################
 #
 # Strings used by main:
@@ -275,6 +319,20 @@ main:
 	la	$a0, STR_str
 	jal	print_test_string
 	
+	# print out some new empty lines
+	li	$v0, 4
+	la	$a0, NLNL
+	syscall
+	
+	##
+	### string_reverse(string)
+	
+	la 	$a0, STR_str
+	jal	string_reverse
+	
+	la	$a0, STR_str
+	jal	print_test_string
+	
 	
 	lw	$ra, 0($sp)	# POP return address
 	addi	$sp, $sp, 4	
@@ -306,7 +364,7 @@ STR_quote:
 	syscall
 
 	add	$a0, $t0, $zero #QHP: Restore the value of $a0 after system call
-	syscall
+	syscall	#QHP: now syscall help printing out the string with address stored in $a0
 
 	li	$v0, 4	
 	la	$a0, STR_quote
