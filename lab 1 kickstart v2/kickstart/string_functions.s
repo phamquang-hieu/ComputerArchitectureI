@@ -18,7 +18,6 @@ FIBONACCI_ARRAY:
 	.word	1, 1, 2, 3, 5, 8, 13, 21, 34, 55
 STR_str:
 	.asciiz "Hunden, Katten, Glassen"
-
 	.globl DBG
 	.text
 
@@ -122,23 +121,31 @@ string_length:
 ##############################################################################	
 string_for_each:
 	
-
+	# if the string is empty then return right away.
+	lb	$t0, 0($a0)
+	beqz 	$t0, return_string_for_each
+	
+	# else if the string is not empty.
 	addi	$sp, $sp, -8		# PUSH return address to caller
 	sw	$ra, 0($sp)
-	sw	$a0, 4($sp)
 	
-	jalr $a1
+	str_for_each_loop:
+		sw	$a0, 4($sp)
+	
+		jalr $a1
+	
+		lw	$a0, 4($sp)
+	
+		addi 	$a0, $a0, 1
+	
+		lb 	$t0, 0($a0)
+	
+		bne 	$t0, $zero, str_for_each_loop
 	
 	lw	$ra, 0($sp)		# Pop return address to caller
-	lw	$a0, 4($sp)
 	addi	$sp, $sp, 8	
-	
-	addi $a0, $a0, 1
-	
-	lb $t0, 0($a0)
-	
-	bne $t0, $zero, string_for_each
-	
+
+return_string_for_each:
 	jr	$ra
 
 ##############################################################################
@@ -157,9 +164,9 @@ to_upper:
 	bgt $t0, 122, return_to_upper
 	blt $t0, 97, return_to_upper
 	
-	addi $t0, $t0, -32 # turn the character to upper case
+	addi $t0, $t0, -32 	# turn the character to upper case
 	
-	sb $t0, 0($a0) # load the character back to memory
+	sb $t0, 0($a0) 		# load the character back to memory
 	
 return_to_upper:
 	jr	$ra
@@ -191,18 +198,18 @@ string_reverse:
 	
 	# if the last index is not yet = the first index or = the first index - 1
 	while_true:
-		lb	$t1, 0($t0)
-		lb	$t2, 0($a0)
+		lb	$t1, 0($t0)	# load the last character into $t1
+		lb	$t2, 0($a0)	# load the 1st character into $t2
 		
-		sb	$t2, 0($t0)
-		sb	$t1, 0($a0)
+		sb	$t2, 0($t0)	# store the 1st character at the position of the last character
+		sb	$t1, 0($a0)	# store the last character at the position of the 1st character
 		
-		beq	$a0, $t0, end_reverse
+		beq	$a0, $t0, end_reverse	# incase the string's length is odd -> reversing ends when 1st pointer = last pointer
 		addi	$t2, $a0, -1
-		beq	$t2, $t0, end_reverse
+		beq	$t2, $t0, end_reverse	# incase the string's length is even -> reversing ends when 1st pointer is 1 unit greater than the last pointer
 		
-		addi	$a0, $a0, 1
-		addi	$t0, $t0, -1	
+		addi	$a0, $a0, 1		# increase the 1st pointer
+		addi	$t0, $t0, -1		# decrease the last pointer
 		
 		j while_true
 
